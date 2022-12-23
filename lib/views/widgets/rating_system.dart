@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RatingWidget extends StatefulWidget {
-  final Function(int) selectedIndex;
+  final Function(double) selectedIndex;
   const RatingWidget(this.selectedIndex, {Key key}) : super(key: key);
 
   @override
@@ -25,7 +25,7 @@ class _RatingWidgetState extends State<RatingWidget> {
           setState(() {
             currentIndex = index + 1;
           });
-          widget.selectedIndex(currentIndex);
+          widget.selectedIndex(currentIndex.toDouble());
         },
         child: _buildStar(index),
       );

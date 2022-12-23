@@ -1,19 +1,27 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:food_recipe/models/errors.dart';
 import 'package:food_recipe/models/recipe.dart';
+import 'package:food_recipe/views/home.dart';
 import 'package:food_recipe/views/widgets/rating_system.dart';
+import 'package:food_recipe/controllers/recipe.api.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class EditPage extends StatefulWidget {
-  final Recipe recipe;
-  const EditPage({@required this.recipe, Key key}) : super(key: key);
+class AddNewRecipe extends StatefulWidget {
+  const AddNewRecipe({Key key}) : super(key: key);
 
   @override
-  createState() => _EditPageState();
+  createState() => _AddNewRecipeState();
 }
 
-class _EditPageState extends State<EditPage> {
+class _AddNewRecipeState extends State<AddNewRecipe> {
   double index = 0;
   DateTime time = DateTime(2016, 8, 6, 00, 00);
+  String timeConcat;
+  TextEditingController name = TextEditingController();
+  TextEditingController image = TextEditingController();
+  TextEditingController description = TextEditingController();
 
   void _showDialog(Widget child) {
     showCupertinoModalPopup(
@@ -31,11 +39,27 @@ class _EditPageState extends State<EditPage> {
     );
   }
 
+  Future<dynamic> addNewRecipe() async {
+    var response = await RecipeApi.addNewRecipe(Recipe(
+      name: name.text,
+      image: image.text,
+      description: description.text,
+      totalTime: timeConcat,
+      rating: index,
+    ));
+    return response.bodyBytes;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CupertinoNavigationBar(
-          middle: const Text("Editar Informações"),
+          middle: const Text("Adicionar Informações"),
           leading: IconButton(
             color: Colors.black,
             onPressed: () {
@@ -71,8 +95,8 @@ class _EditPageState extends State<EditPage> {
                         const Text("Time to cook:"),
                         OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.black),
-                              backgroundColor: Colors.amber),
+                            side: const BorderSide(color: Colors.black),
+                          ),
                           onPressed: (() => _showDialog(
                                 CupertinoDatePicker(
                                   initialDateTime: time,
@@ -81,6 +105,8 @@ class _EditPageState extends State<EditPage> {
                                   onDateTimeChanged: (DateTime time) {
                                     setState(() {
                                       this.time = time;
+                                      timeConcat =
+                                          "${time.hour} hr ${time.minute} min";
                                     });
                                   },
                                 ),
@@ -97,7 +123,7 @@ class _EditPageState extends State<EditPage> {
                 const SizedBox(height: 20),
                 const Text("Name of recipe:"),
                 TextFormField(
-                  controller: TextEditingController(text: widget.recipe.name),
+                  controller: name,
                   decoration: const InputDecoration(
                     focusedBorder: OutlineInputBorder(),
                     border: OutlineInputBorder(),
@@ -107,8 +133,7 @@ class _EditPageState extends State<EditPage> {
                 const SizedBox(height: 20),
                 const Text("Description of recipe:"),
                 TextFormField(
-                  controller:
-                      TextEditingController(text: widget.recipe.description),
+                  controller: description,
                   decoration: const InputDecoration(
                     focusedBorder: OutlineInputBorder(),
                     border: OutlineInputBorder(),
@@ -119,7 +144,7 @@ class _EditPageState extends State<EditPage> {
                 const SizedBox(height: 20),
                 const Text("Image of recipe:"),
                 TextFormField(
-                  controller: TextEditingController(text: widget.recipe.image),
+                  controller: image,
                   decoration: const InputDecoration(
                     focusedBorder: OutlineInputBorder(),
                     border: OutlineInputBorder(),
@@ -136,10 +161,22 @@ class _EditPageState extends State<EditPage> {
                         side: const BorderSide(color: Colors.black),
                         backgroundColor: Colors.amber),
                     child: const Text(
-                      "Editar Informações",
+                      "Adicionar Informações",
                       style: TextStyle(color: Colors.black),
                     ),
-                    onPressed: () {},
+                    onPressed: () async {
+                      var message = await addNewRecipe();
+                      if (message.toString() != "[]") {
+                        ErrorExceptions error =
+                            ErrorExceptions.parseErrors(utf8.decode(message));
+                        print(error.message);
+                      } else {
+                        if (mounted) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const HomePage()));
+                        }
+                      }
+                    },
                   ),
                 ),
               ],
